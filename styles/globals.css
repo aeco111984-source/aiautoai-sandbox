@@ -16,7 +16,7 @@ html, body {
   flex-direction: column;
 }
 
-/* Floating Toolbar C (AI Studio Bar) */
+/* Floating AI Toolbar C */
 .toolbarC {
   position: fixed;
   top: 0;
@@ -45,7 +45,7 @@ html, body {
   background: #1a2a4f;
 }
 
-/* push content down because toolbar is fixed */
+/* Push header down below toolbar */
 .app-header {
   margin-top: 48px;
 }
@@ -60,7 +60,7 @@ html, body {
   background: #0b1020;
 }
 
-/* Main Layout */
+/* Main layout */
 .layout {
   flex: 1;
   display: flex;
@@ -76,7 +76,6 @@ html, body {
   min-height: 0;
 }
 
-/* Titles */
 .panel h2 {
   margin: 0;
   padding: 0.5rem 0.75rem;
@@ -85,24 +84,24 @@ html, body {
   border-bottom: 1px solid #222;
 }
 
-/* Left Panel */
+/* Left panel */
 .panel-list {
   width: 22%;
   min-width: 180px;
 }
 
-/* Chat Panel */
+/* Chat panel */
 .panel-chat {
   width: 38%;
   min-width: 220px;
 }
 
-/* Preview Panel */
+/* Preview panel */
 .panel-preview {
   flex: 1;
 }
 
-/* Project List */
+/* Project list */
 .project-list {
   list-style: none;
   margin: 0;
@@ -128,7 +127,12 @@ html, body {
   background: #1f2a44;
 }
 
-/* Chat Log */
+.tag {
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+/* Chat log */
 .chat-log {
   flex: 1;
   padding: 0.5rem;
@@ -148,7 +152,7 @@ html, body {
   color: #f6d47a;
 }
 
-/* Pending Command Box */
+/* Pending command box */
 .pending-box {
   background: #142033;
   border: 1px solid #2a3b55;
@@ -167,7 +171,7 @@ html, body {
   margin-bottom: 0.6rem;
 }
 
-.pending-apply-btn {
+.pending-btn {
   padding: 0.4rem 0.7rem;
   font-size: 0.8rem;
   background: #1a7d2b;
@@ -177,7 +181,7 @@ html, body {
   cursor: pointer;
 }
 
-/* Chat Input */
+/* Chat input */
 .chat-input-row {
   display: flex;
   padding: 0.5rem;
@@ -219,7 +223,7 @@ iframe {
   background: #ffffff !important;
 }
 
-/* Section Style */
+/* Section style */
 .sandbox-section {
   background: #ffffff;
   color: #000000;
@@ -229,6 +233,84 @@ iframe {
   border-radius: 6px;
   font-size: 0.9rem;
   line-height: 1.45;
+}
+
+/* Recent commands */
+.recent-commands {
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid #20273a;
+  background: #050b18;
+}
+
+.recent-title {
+  font-size: 0.75rem;
+  opacity: 0.8;
+  margin-bottom: 0.2rem;
+}
+
+.recent-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.recent-btn {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.72rem;
+  border-radius: 4px;
+  border: 1px solid #2a3650;
+  background: #111b32;
+  color: #e0e6ff;
+  cursor: pointer;
+}
+
+/* History panel */
+.history-panel {
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid #20273a;
+  background: #040817;
+  font-size: 0.78rem;
+}
+
+.history-title {
+  font-size: 0.76rem;
+  opacity: 0.85;
+  margin-bottom: 0.3rem;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.35rem;
+}
+
+.history-meta {
+  max-width: 60%;
+}
+
+.history-label {
+  font-size: 0.78rem;
+}
+
+.history-time {
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+.history-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.history-btn {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.7rem;
+  border-radius: 4px;
+  border: 1px solid #3a4460;
+  background: #10182f;
+  color: #f5f5f5;
+  cursor: pointer;
 }
 
 /* Mobile */
