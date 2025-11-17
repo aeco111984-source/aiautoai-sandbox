@@ -14,17 +14,9 @@ const TEMPLATES = {
 
     <section class="sandbox-section">
       <h2>Live Converter</h2>
-      <p>[converter placeholder]</p>
-    </section>
-
-    <section class="sandbox-section">
-      <h2>Live Rates</h2>
-      <p>[rates placeholder]</p>
-    </section>
-
-    <section class="sandbox-section">
-      <p>About · Privacy</p>
-    </section>
+      <p>[converter placeholder]</p></section>
+    <section><h2>Live Rates</h2><p>[rates placeholder]</p></section>
+    <footer><p>About · Privacy</p></footer>
   `,
   simple: `
     <section class="sandbox-section">
@@ -35,14 +27,13 @@ const TEMPLATES = {
       <h2>Headline</h2>
       <p>Explain your value here.</p>
     </section>
-
     <section class="sandbox-section">
-      <p>Contact · Terms</p>
+      <h2>Call to Action</h2>
+      <p>Contact us or sign up below.</p>
     </section>
   `
 };
 
-// Convert chat text → structured command
 function buildCommandFromText(text) {
   const t = text.toLowerCase();
 
@@ -78,30 +69,66 @@ function buildCommandFromText(text) {
     return { type: "SET_TEMPLATE", template: "simple" };
   }
 
+  if (t.includes("autopilot")) {
+    return {
+      type: "AUTOPILOT_PLAN",
+      plan: "basic-landing"
+    };
+  }
+
   return null;
 }
 
 function describeCommand(cmd) {
   if (!cmd) return "";
   if (cmd.type === "ADD_SECTION") return "Add a clean, styled section to the page.";
-  if (cmd.type === "SET_TEMPLATE" && cmd.template === "fx") return "Switch to the FX template.";
+  if (cmd.type === "SET_TEMPLATE" && cmd.template === "fx")
+    return "Switch to the FX template.";
   if (cmd.type === "SET_TEMPLATE" && cmd.template === "simple")
     return "Switch to the Simple Landing template.";
+  if (cmd.type === "AUTOPILOT_PLAN" && cmd.plan === "basic-landing")
+    return "Run Autopilot: build a basic landing page (Simple template + About + Pricing).";
   return "Unknown action.";
+}
+
+function expandAutopilotPlan(plan) {
+  if (plan === "basic-landing") {
+    return [
+      { type: "SET_TEMPLATE", template: "simple" },
+      {
+        type: "ADD_SECTION",
+        html: `
+        <section class="sandbox-section">
+          <h2>About</h2>
+          <p>Write about your project here.</p>
+        </section>
+      `
+      },
+      {
+        type: "ADD_SECTION",
+        html: `
+        <section class="sandbox-section">
+          <h2>Pricing</h2>
+          <p>Basic · Pro · Enterprise.</p>
+        </section>
+      `
+      }
+    ];
+  }
+  return [];
 }
 
 export default function Home() {
   const [projects, setProjects] = useState([
     { id: 1, name: "My First Site", type: "simple", html: TEMPLATES.simple }
   ]);
-
   const [activeId, setActiveId] = useState(1);
   const [chatInput, setChatInput] = useState("");
   const [chatLog, setChatLog] = useState([
     {
       from: "system",
       text:
-        "Welcome to Sandbox v1.3. Use the floating AI Toolbar or type a request, approve it, and see perfectly visible sections."
+        "Welcome to AI Sandbox v1.4 (Autopilot Base). Type a request, or tap Autopilot, approve the plan, and I will run multiple steps for you."
     }
   ]);
   const [pendingCommand, setPendingCommand] = useState(null);
@@ -139,7 +166,7 @@ export default function Home() {
         {
           from: "system",
           text:
-            "Unrecognized. Try: 'add about', 'add pricing', 'make fx', or 'simplify'."
+            "Unrecognized. Try: 'add about', 'add pricing', 'make fx', 'simplify', or 'autopilot'."
         }
       ]);
       setPendingCommand(null);
@@ -157,18 +184,36 @@ export default function Home() {
     ]);
   }
 
-  function applyCommand(cmd) {
-    if (!cmd || !activeProject) return;
-
-    let html = activeProject.html || "";
+  function applySingleCommand(cmd, currentHtml) {
+    let html = currentHtml || "";
 
     if (cmd.type === "ADD_SECTION") {
       html += cmd.html;
     }
 
-    if (cmd.type === "SET_TEMPLATE") {
+    if (cmd.type === "SET_TEMPLATE" && TEMPLATES[cmd.template]) {
       html = TEMPLATES[cmd.template];
     }
+
+    return html;
+  }
+
+  function applyCommand(cmd) {
+    if (!cmd || !activeProject) return;
+
+    let html = activeProject.html || "";
+    const isAutopilot = cmd.type === "AUTOPILOT_PLAN";
+    let allCommands = [];
+
+    if (isAutopilot) {
+      allCommands = expandAutopilotPlan(cmd.plan);
+    } else {
+      allCommands = [cmd];
+    }
+
+    allCommands.forEach(c => {
+      html = applySingleCommand(c, html);
+    });
 
     setProjects(prev =>
       prev.map(p => (p.id === activeProject.id ? { ...p, html } : p))
@@ -176,7 +221,12 @@ export default function Home() {
 
     setChatLog(prev => [
       ...prev,
-      { from: "system", text: `Applied: ${describeCommand(cmd)}` }
+      {
+        from: "system",
+        text: isAutopilot
+          ? `Applied Autopilot Plan: ${describeCommand(cmd)}`
+          : `Applied: ${describeCommand(cmd)}`
+      }
     ]);
 
     setPendingCommand(null);
@@ -189,17 +239,29 @@ export default function Home() {
     }, 100);
   }
 
-  // Floating toolbar handlers (currently logging only — safe, no side effects)
   function handleToolbarClick(actionId) {
+    if (actionId === "autopilot") {
+      const cmd = { type: "AUTOPILOT_PLAN", plan: "basic-landing" };
+      setPendingCommand(cmd);
+      setChatLog(prev => [
+        ...prev,
+        {
+          from: "system",
+          text:
+            "Proposed action (Autopilot): Run basic landing page plan — set Simple template + add About + Pricing."
+        }
+      ]);
+      return;
+    }
+
     setChatLog(prev => [
       ...prev,
-      { from: "system", text: `ToolbarC clicked: ${actionId}` }
+      { from: "system", text: `ToolbarC clicked: ${actionId} (no action wired yet).` }
     ]);
   }
 
   return (
     <div className="app">
-      {/* Floating AI Studio Toolbar C */}
       <div className="toolbarC" aria-label="AI Studio Toolbar C">
         <button
           data-ai-id="toolbarC-suggest"
@@ -252,7 +314,7 @@ export default function Home() {
       </div>
 
       <header className="app-header">
-        <h1>AI Sandbox v1.3</h1>
+        <h1>AI Sandbox v1.4 (Autopilot Base)</h1>
         <div className="app-header-actions">
           <button onClick={() => addProject("simple")}>+ Simple Site</button>
           <button onClick={() => addProject("fx")}>+ FX Site</button>
@@ -299,7 +361,7 @@ export default function Home() {
                 {describeCommand(pendingCommand)}
               </div>
               <button
-                className="pending-apply-btn"
+                className="pending-btn"
                 onClick={() => applyCommand(pendingCommand)}
               >
                 ✅ Approve & Apply
@@ -310,7 +372,7 @@ export default function Home() {
           <form className="chat-input-row" onSubmit={handleChatSubmit}>
             <input
               type="text"
-              placeholder="Try: 'add about', 'add pricing', 'make fx', 'simplify'"
+              placeholder="Try: 'add about', 'add pricing', 'make fx', 'simplify', or 'autopilot'"
               value={chatInput}
               onChange={e => setChatInput(e.target.value)}
             />
