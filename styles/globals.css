@@ -81,6 +81,7 @@ html, body {
   flex: 1;
 }
 
+/* Project List */
 .project-list {
   list-style: none;
   margin: 0;
@@ -111,7 +112,7 @@ html, body {
   opacity: 0.7;
 }
 
-/* Chat panel */
+/* Chat Panel */
 .chat-log {
   flex: 1;
   padding: 0.5rem;
@@ -129,6 +130,40 @@ html, body {
 
 .chat-msg.user span {
   color: #f6d47a;
+}
+
+/* Pending command box */
+.pending-box {
+  background: #142033;
+  border: 1px solid #2a3b55;
+  padding: 0.8rem;
+  margin: 0.5rem;
+  border-radius: 6px;
+}
+
+.pending-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+
+.pending-desc {
+  font-size: 0.75rem;
+  margin-bottom: 0.6rem;
+}
+
+.pending-apply-btn {
+  padding: 0.4rem 0.7rem;
+  font-size: 0.8rem;
+  background: #1a7d2b;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+}
+
+.pending-apply-btn:hover {
+  background: #22a238;
 }
 
 .chat-input-row {
@@ -169,12 +204,25 @@ html, body {
   background: #02040a;
 }
 
-.panel-preview iframe {
+/* FORCE iframe background white */
+iframe {
   width: 100%;
   height: 100%;
   border: 1px solid #222;
   border-radius: 4px;
-  background: white;
+  background: #ffffff !important;
+}
+
+/* NEW v1.2 SECTION STYLE */
+.sandbox-section {
+  background: #ffffff;
+  color: #000000;
+  padding: 22px;
+  margin: 24px 0;
+  border: 1px solid #e1e1e1;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  line-height: 1.45;
 }
 
 /* Mobile */
