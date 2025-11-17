@@ -16,6 +16,41 @@ html, body {
   flex-direction: column;
 }
 
+/* Floating Toolbar C (AI Studio Bar) */
+.toolbarC {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  background: #0d1424;
+  border-bottom: 1px solid #1d2536;
+  padding: 6px 4px;
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.toolbarC button {
+  padding: 6px 10px;
+  font-size: 0.72rem;
+  border-radius: 6px;
+  border: 1px solid #2a3650;
+  background: #101b33;
+  color: #dfe6ff;
+  cursor: pointer;
+}
+
+.toolbarC button:active {
+  background: #1a2a4f;
+}
+
+/* push content down because toolbar is fixed */
+.app-header {
+  margin-top: 48px;
+}
+
+/* Header */
 .app-header {
   display: flex;
   align-items: center;
@@ -25,26 +60,7 @@ html, body {
   background: #0b1020;
 }
 
-.app-header h1 {
-  font-size: 1rem;
-  margin: 0;
-}
-
-.app-header-actions button {
-  margin-left: 0.5rem;
-  padding: 0.35rem 0.65rem;
-  font-size: 0.8rem;
-  border-radius: 4px;
-  border: 1px solid #444;
-  background: #10182f;
-  color: #f5f5f5;
-  cursor: pointer;
-}
-
-.app-header-actions button:hover {
-  background: #1a2340;
-}
-
+/* Main Layout */
 .layout {
   flex: 1;
   display: flex;
@@ -52,6 +68,7 @@ html, body {
   min-height: 0;
 }
 
+/* Panels */
 .panel {
   border-right: 1px solid #222;
   display: flex;
@@ -59,6 +76,7 @@ html, body {
   min-height: 0;
 }
 
+/* Titles */
 .panel h2 {
   margin: 0;
   padding: 0.5rem 0.75rem;
@@ -67,16 +85,19 @@ html, body {
   border-bottom: 1px solid #222;
 }
 
+/* Left Panel */
 .panel-list {
   width: 22%;
   min-width: 180px;
 }
 
+/* Chat Panel */
 .panel-chat {
   width: 38%;
   min-width: 220px;
 }
 
+/* Preview Panel */
 .panel-preview {
   flex: 1;
 }
@@ -107,12 +128,7 @@ html, body {
   background: #1f2a44;
 }
 
-.tag {
-  font-size: 0.7rem;
-  opacity: 0.7;
-}
-
-/* Chat Panel */
+/* Chat Log */
 .chat-log {
   flex: 1;
   padding: 0.5rem;
@@ -132,7 +148,7 @@ html, body {
   color: #f6d47a;
 }
 
-/* Pending command box */
+/* Pending Command Box */
 .pending-box {
   background: #142033;
   border: 1px solid #2a3b55;
@@ -144,7 +160,6 @@ html, body {
 .pending-title {
   font-size: 0.8rem;
   font-weight: 600;
-  margin-bottom: 0.3rem;
 }
 
 .pending-desc {
@@ -162,10 +177,7 @@ html, body {
   cursor: pointer;
 }
 
-.pending-apply-btn:hover {
-  background: #22a238;
-}
-
+/* Chat Input */
 .chat-input-row {
   display: flex;
   padding: 0.5rem;
@@ -190,21 +202,15 @@ html, body {
   border: 1px solid #444;
   background: #10182f;
   color: #f5f5f5;
-  cursor: pointer;
-}
-
-.chat-input-row button:hover {
-  background: #1a2340;
 }
 
 /* Preview */
-.panel-preview .preview-frame {
+.preview-frame {
   flex: 1;
   padding: 0.5rem;
   background: #02040a;
 }
 
-/* FORCE iframe background white */
 iframe {
   width: 100%;
   height: 100%;
@@ -213,7 +219,7 @@ iframe {
   background: #ffffff !important;
 }
 
-/* NEW v1.2 SECTION STYLE */
+/* Section Style */
 .sandbox-section {
   background: #ffffff;
   color: #000000;
