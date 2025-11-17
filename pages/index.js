@@ -47,21 +47,27 @@ function buildCommandFromText(text) {
   const t = text.toLowerCase();
 
   if (t.includes("add about")) {
-    return { type: "ADD_SECTION", html: `
+    return {
+      type: "ADD_SECTION",
+      html: `
       <section class="sandbox-section">
         <h2>About</h2>
         <p>Write about your project here.</p>
       </section>
-    ` };
+    `
+    };
   }
 
   if (t.includes("add pricing")) {
-    return { type: "ADD_SECTION", html: `
+    return {
+      type: "ADD_SECTION",
+      html: `
       <section class="sandbox-section">
         <h2>Pricing</h2>
         <p>Basic · Pro · Enterprise.</p>
       </section>
-    ` };
+    `
+    };
   }
 
   if (t.includes("make fx")) {
@@ -79,7 +85,8 @@ function describeCommand(cmd) {
   if (!cmd) return "";
   if (cmd.type === "ADD_SECTION") return "Add a clean, styled section to the page.";
   if (cmd.type === "SET_TEMPLATE" && cmd.template === "fx") return "Switch to the FX template.";
-  if (cmd.type === "SET_TEMPLATE" && cmd.template === "simple") return "Switch to the Simple Landing template.";
+  if (cmd.type === "SET_TEMPLATE" && cmd.template === "simple")
+    return "Switch to the Simple Landing template.";
   return "Unknown action.";
 }
 
@@ -91,7 +98,11 @@ export default function Home() {
   const [activeId, setActiveId] = useState(1);
   const [chatInput, setChatInput] = useState("");
   const [chatLog, setChatLog] = useState([
-    { from: "system", text: "Welcome to Sandbox v1.2. Type a request, approve it, and see perfectly visible sections." }
+    {
+      from: "system",
+      text:
+        "Welcome to Sandbox v1.3. Use the floating AI Toolbar or type a request, approve it, and see perfectly visible sections."
+    }
   ]);
   const [pendingCommand, setPendingCommand] = useState(null);
 
@@ -105,7 +116,10 @@ export default function Home() {
     setProjects(prev => [...prev, { id, name, type, html }]);
     setActiveId(id);
 
-    setChatLog(prev => [...prev, { from: "system", text: `Created ${name} using ${type} template.` }]);
+    setChatLog(prev => [
+      ...prev,
+      { from: "system", text: `Created ${name} using ${type} template.` }
+    ]);
     setPendingCommand(null);
   }
 
@@ -124,7 +138,8 @@ export default function Home() {
         ...prev,
         {
           from: "system",
-          text: "Unrecognized. Try: 'add about', 'add pricing', 'make fx', or 'simplify'."
+          text:
+            "Unrecognized. Try: 'add about', 'add pricing', 'make fx', or 'simplify'."
         }
       ]);
       setPendingCommand(null);
@@ -166,7 +181,6 @@ export default function Home() {
 
     setPendingCommand(null);
 
-    // auto-scroll preview after apply
     setTimeout(() => {
       const iframe = document.querySelector("iframe");
       if (iframe?.contentWindow) {
@@ -175,10 +189,70 @@ export default function Home() {
     }, 100);
   }
 
+  // Floating toolbar handlers (currently logging only — safe, no side effects)
+  function handleToolbarClick(actionId) {
+    setChatLog(prev => [
+      ...prev,
+      { from: "system", text: `ToolbarC clicked: ${actionId}` }
+    ]);
+  }
+
   return (
     <div className="app">
+      {/* Floating AI Studio Toolbar C */}
+      <div className="toolbarC" aria-label="AI Studio Toolbar C">
+        <button
+          data-ai-id="toolbarC-suggest"
+          onClick={() => handleToolbarClick("suggest")}
+        >
+          Suggest
+        </button>
+        <button
+          data-ai-id="toolbarC-actions"
+          onClick={() => handleToolbarClick("actions")}
+        >
+          Actions
+        </button>
+        <button
+          data-ai-id="toolbarC-macros"
+          onClick={() => handleToolbarClick("macros")}
+        >
+          Macros
+        </button>
+        <button
+          data-ai-id="toolbarC-autopilot"
+          onClick={() => handleToolbarClick("autopilot")}
+        >
+          Autopilot
+        </button>
+        <button
+          data-ai-id="toolbarC-structure"
+          onClick={() => handleToolbarClick("structure")}
+        >
+          Structure
+        </button>
+        <button
+          data-ai-id="toolbarC-content"
+          onClick={() => handleToolbarClick("content")}
+        >
+          Content
+        </button>
+        <button
+          data-ai-id="toolbarC-style"
+          onClick={() => handleToolbarClick("style")}
+        >
+          Style
+        </button>
+        <button
+          data-ai-id="toolbarC-deploy"
+          onClick={() => handleToolbarClick("deploy")}
+        >
+          Deploy
+        </button>
+      </div>
+
       <header className="app-header">
-        <h1>AI Sandbox v1.2</h1>
+        <h1>AI Sandbox v1.3</h1>
         <div className="app-header-actions">
           <button onClick={() => addProject("simple")}>+ Simple Site</button>
           <button onClick={() => addProject("fx")}>+ FX Site</button>
@@ -218,9 +292,12 @@ export default function Home() {
 
           {pendingCommand && (
             <div className="pending-box">
-              <div className="pending-title">Pending Action — requires your approval:</div>
-              <div className="pending-desc">{describeCommand(pendingCommand)}</div>
-
+              <div className="pending-title">
+                Pending Action — requires your approval:
+              </div>
+              <div className="pending-desc">
+                {describeCommand(pendingCommand)}
+              </div>
               <button
                 className="pending-apply-btn"
                 onClick={() => applyCommand(pendingCommand)}
