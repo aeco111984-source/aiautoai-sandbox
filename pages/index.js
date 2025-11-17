@@ -15,6 +15,44 @@ const TEMPLATES = {
   `
 };
 
+// Very simple "command router" that turns text into a structured command
+function buildCommandFromText(text) {
+  const t = text.toLowerCase();
+
+  if (t.includes("add about")) {
+    return { type: "ADD_SECTION", section: "about" };
+  }
+  if (t.includes("add pricing")) {
+    return { type: "ADD_SECTION", section: "pricing" };
+  }
+  if (t.includes("make fx")) {
+    return { type: "SET_TEMPLATE", template: "fx" };
+  }
+  if (t.includes("simplify")) {
+    return { type: "SET_TEMPLATE", template: "simple" };
+  }
+
+  // no recognised command
+  return null;
+}
+
+function describeCommand(cmd) {
+  if (!cmd) return "";
+  if (cmd.type === "ADD_SECTION" && cmd.section === "about") {
+    return "Add an About section to the current page.";
+  }
+  if (cmd.type === "ADD_SECTION" && cmd.section === "pricing") {
+    return "Add a Pricing section to the current page.";
+  }
+  if (cmd.type === "SET_TEMPLATE" && cmd.template === "fx") {
+    return "Switch the current project to the FX template.";
+  }
+  if (cmd.type === "SET_TEMPLATE" && cmd.template === "simple") {
+    return "Simplify the layout to the Simple Landing template.";
+  }
+  return "Unknown action.";
+}
+
 export default function Home() {
   const [projects, setProjects] = useState([
     { id: 1, name: "My First Site", type: "simple", html: TEMPLATES.simple }
@@ -22,8 +60,9 @@ export default function Home() {
   const [activeId, setActiveId] = useState(1);
   const [chatInput, setChatInput] = useState("");
   const [chatLog, setChatLog] = useState([
-    { from: "system", text: "Welcome to Sandbox v1.0. Select a project and ask for changes." }
+    { from: "system", text: "Welcome to Sandbox v1.1. Type a request, then approve the suggested action." }
   ]);
+  const [pendingCommand, setPendingCommand] = useState(null);
 
   const activeProject = projects.find(p => p.id === activeId);
 
@@ -37,6 +76,7 @@ export default function Home() {
       ...prev,
       { from: "system", text: `Created ${name} using ${type} template.` }
     ]);
+    setPendingCommand(null);
   }
 
   function handleChatSubmit(e) {
@@ -46,41 +86,51 @@ export default function Home() {
     setChatLog(prev => [...prev, { from: "user", text: userText }]);
     setChatInput("");
 
-    // Demo AI actions
-    if (/add about/i.test(userText)) {
-      applyAction("ADD_ABOUT");
-    } else if (/add pricing/i.test(userText)) {
-      applyAction("ADD_PRICING");
-    } else if (/make fx/i.test(userText)) {
-      applyAction("SET_FX");
-    } else if (/simplify/i.test(userText)) {
-      applyAction("SIMPLIFY");
-    } else {
+    const cmd = buildCommandFromText(userText);
+    if (!cmd) {
       setChatLog(prev => [
         ...prev,
         {
           from: "system",
-          text: "Sandbox v1 demo: try 'add about', 'add pricing', 'make fx', or 'simplify layout'."
+          text:
+            "No specific action recognised. Try: 'add about', 'add pricing', 'make fx', or 'simplify'."
         }
       ]);
+      setPendingCommand(null);
+      return;
     }
+
+    setPendingCommand(cmd);
+    setChatLog(prev => [
+      ...prev,
+      {
+        from: "system",
+        text: "Proposed action: " + describeCommand(cmd)
+      }
+    ]);
   }
 
-  function applyAction(action) {
-    if (!activeProject) return;
+  function applyCommand(cmd) {
+    if (!cmd || !activeProject) return;
 
     let html = activeProject.html || "";
-    if (action === "ADD_ABOUT") {
-      html += `<section><h2>About</h2><p>Write about your project here.</p></section>`;
+
+    if (cmd.type === "ADD_SECTION") {
+      if (cmd.section === "about") {
+        html += `<section><h2>About</h2><p>Write about your project here.</p></section>`;
+      }
+      if (cmd.section === "pricing") {
+        html += `<section><h2>Pricing</h2><p>Basic · Pro · Enterprise.</p></section>`;
+      }
     }
-    if (action === "ADD_PRICING") {
-      html += `<section><h2>Pricing</h2><p>Basic · Pro · Enterprise.</p></section>`;
-    }
-    if (action === "SET_FX") {
-      html = TEMPLATES.fx;
-    }
-    if (action === "SIMPLIFY") {
-      html = TEMPLATES.simple;
+
+    if (cmd.type === "SET_TEMPLATE") {
+      if (cmd.template === "fx") {
+        html = TEMPLATES.fx;
+      }
+      if (cmd.template === "simple") {
+        html = TEMPLATES.simple;
+      }
     }
 
     setProjects(prev =>
@@ -88,14 +138,15 @@ export default function Home() {
     );
     setChatLog(prev => [
       ...prev,
-      { from: "system", text: `Applied action: ${action}.` }
+      { from: "system", text: `Applied: ${describeCommand(cmd)}` }
     ]);
+    setPendingCommand(null);
   }
 
   return (
     <div className="app">
       <header className="app-header">
-        <h1>AI Sandbox v1.0</h1>
+        <h1>AI Sandbox v1.1</h1>
         <div className="app-header-actions">
           <button onClick={() => addProject("simple")}>+ Simple Site</button>
           <button onClick={() => addProject("fx")}>+ FX Site</button>
@@ -103,6 +154,7 @@ export default function Home() {
       </header>
 
       <main className="layout">
+        {/* LEFT: Projects */}
         <section className="panel panel-list">
           <h2>Projects</h2>
           <ul className="project-list">
@@ -110,7 +162,10 @@ export default function Home() {
               <li
                 key={p.id}
                 className={p.id === activeId ? "active" : ""}
-                onClick={() => setActiveId(p.id)}
+                onClick={() => {
+                  setActiveId(p.id);
+                  setPendingCommand(null);
+                }}
               >
                 <strong>{p.name}</strong>
                 <span className="tag">{p.type}</span>
@@ -119,6 +174,7 @@ export default function Home() {
           </ul>
         </section>
 
+        {/* CENTER: Chat / Commands */}
         <section className="panel panel-chat">
           <h2>Chat / Commands</h2>
           <div className="chat-log">
@@ -128,17 +184,32 @@ export default function Home() {
               </div>
             ))}
           </div>
+
+          {pendingCommand && (
+            <div className="pending-box">
+              <div className="pending-title">Pending Action (requires your approval):</div>
+              <div className="pending-desc">{describeCommand(pendingCommand)}</div>
+              <button
+                className="pending-apply-btn"
+                onClick={() => applyCommand(pendingCommand)}
+              >
+                ✅ Approve & Apply
+              </button>
+            </div>
+          )}
+
           <form className="chat-input-row" onSubmit={handleChatSubmit}>
             <input
               type="text"
-              placeholder="Ask for changes… e.g. 'add about', 'add pricing', 'make fx', 'simplify'"
+              placeholder="Type: 'add about', 'add pricing', 'make fx', or 'simplify'"
               value={chatInput}
               onChange={e => setChatInput(e.target.value)}
             />
-            <button type="submit">Apply</button>
+            <button type="submit">Propose</button>
           </form>
         </section>
 
+        {/* RIGHT: Preview */}
         <section className="panel panel-preview">
           <h2>Preview</h2>
           <div className="preview-frame">
