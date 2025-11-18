@@ -411,8 +411,7 @@ export default function Home() {
     setWizardPlan("basic-landing");
   }
 
-  function wizardNext() {  
-    // ------------ wizardNext CONTINUED ------------
+  function wizardNext() {    // ------------ wizardNext CONTINUED ------------
   function wizardNext() {
     if (wizardStep === 1) {
       setWizardStep(2);
@@ -675,8 +674,7 @@ export default function Home() {
         </div>
       </div>
     );
-  }
-  // ------------ MAIN RETURN ------------
+  }  // ------------ MAIN RETURN ------------
   return (
     <div className="app">
       {/* Floating Toolbar C */}
@@ -848,4 +846,3 @@ export default function Home() {
     </div>
   );
 }
-
