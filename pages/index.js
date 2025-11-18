@@ -42,7 +42,6 @@ const TEMPLATES = {
   `
 };
 
-// ------------- COMMAND BUILDER ----------------
 function buildCommandFromText(text) {
   const t = text.toLowerCase();
 
@@ -102,7 +101,6 @@ function describeCommand(cmd) {
   return "Unknown action.";
 }
 
-// ------------- AUTOPILOT PLAN ----------------
 function expandAutopilotPlan(plan) {
   if (plan === "basic-landing") {
     return [
@@ -130,10 +128,15 @@ function expandAutopilotPlan(plan) {
   return [];
 }
 
-// ------------- MAIN APP ----------------
 export default function Home() {
   const [projects, setProjects] = useState([
-    { id: 1, name: "My First Site", type: "simple", html: TEMPLATES.simple }
+    {
+      id: 1,
+      name: "My First Site",
+      type: "simple",
+      html: TEMPLATES.simple,
+      history: []
+    }
   ]);
 
   const [activeId, setActiveId] = useState(1);
@@ -142,29 +145,31 @@ export default function Home() {
     {
       from: "system",
       text:
-        "Welcome to AI Sandbox v1.5 (Smart Search + Recent Commands)."
+        "Welcome to AI Sandbox v1.6 (Snapshots + Recent Commands)."
     }
   ]);
   const [pendingCommand, setPendingCommand] = useState(null);
-
-  // ⭐ NEW: Last 4 recent commands
   const [recentCommands, setRecentCommands] = useState([]);
 
+  const activeProject = projects.find(p => p.id === activeId);
+
   function addRecentCommand(display) {
+    if (!display) return;
     setRecentCommands(prev => {
       const updated = [display, ...prev.filter(x => x !== display)];
       return updated.slice(0, 4);
     });
   }
 
-  const activeProject = projects.find(p => p.id === activeId);
-
   function addProject(type) {
     const id = Date.now();
     const name = type === "fx" ? "New FX Site" : "New Blank Site";
     const html = type === "fx" ? TEMPLATES.fx : TEMPLATES.blank;
 
-    setProjects(prev => [...prev, { id, name, type, html }]);
+    setProjects(prev => [
+      ...prev,
+      { id, name, type, html, history: [] }
+    ]);
     setActiveId(id);
 
     setChatLog(prev => [
@@ -182,6 +187,7 @@ export default function Home() {
     setChatLog(prev => [...prev, { from: "user", text: userText }]);
 
     const cmd = buildCommandFromText(userText);
+    setChatInput("");
 
     if (!cmd) {
       setChatLog(prev => [
@@ -192,13 +198,11 @@ export default function Home() {
             "Unknown. Try: 'add about', 'add pricing', 'make fx', 'simplify', or 'autopilot'."
         }
       ]);
-      setChatInput("");
       return;
     }
 
     addRecentCommand(cmd.display);
     setPendingCommand(cmd);
-    setChatInput("");
 
     setChatLog(prev => [
       ...prev,
@@ -220,28 +224,46 @@ export default function Home() {
   function applyCommand(cmd) {
     if (!cmd || !activeProject) return;
 
-    let html = activeProject.html || "";
-    let finalCommands =
-      cmd.type === "AUTOPILOT_PLAN"
-        ? expandAutopilotPlan(cmd.plan)
-        : [cmd];
+    const isAutopilot = cmd.type === "AUTOPILOT_PLAN";
+    const finalCommands = isAutopilot
+      ? expandAutopilotPlan(cmd.plan)
+      : [cmd];
 
-    finalCommands.forEach(c => {
-      html = applySingleCommand(c, html);
-    });
+    const snapshotLabel = isAutopilot
+      ? "Before Autopilot"
+      : "Before: " + describeCommand(cmd);
+
+    const snapshotTime = new Date().toLocaleTimeString();
 
     setProjects(prev =>
-      prev.map(p => (p.id === activeProject.id ? { ...p, html } : p))
+      prev.map(p => {
+        if (p.id !== activeProject.id) return p;
+
+        const snapshot = {
+          id: Date.now(),
+          label: snapshotLabel,
+          html: p.html,
+          timestamp: snapshotTime
+        };
+
+        let html = p.html || "";
+        finalCommands.forEach(c => {
+          html = applySingleCommand(c, html);
+        });
+
+        const newHistory = [snapshot, ...(p.history || [])].slice(0, 10);
+
+        return { ...p, html, history: newHistory };
+      })
     );
 
     setChatLog(prev => [
       ...prev,
       {
         from: "system",
-        text:
-          cmd.type === "AUTOPILOT_PLAN"
-            ? "Autopilot executed: Basic Landing Plan."
-            : "Applied: " + describeCommand(cmd)
+        text: isAutopilot
+          ? "Autopilot executed: Basic Landing Plan."
+          : "Applied: " + describeCommand(cmd)
       }
     ]);
 
@@ -251,18 +273,24 @@ export default function Home() {
       const iframe = document.querySelector("iframe");
       if (iframe?.contentWindow)
         iframe.contentWindow.scrollTo(0, 99999);
-    }, 100);
+    }, 120);
   }
 
   function handleToolbarClick(actionId) {
     if (actionId === "autopilot") {
-      const cmd = { type: "AUTOPILOT_PLAN", plan: "basic-landing", display: "autopilot" };
+      const cmd = {
+        type: "AUTOPILOT_PLAN",
+        plan: "basic-landing",
+        display: "autopilot"
+      };
       addRecentCommand("autopilot");
       setPendingCommand(cmd);
-
       setChatLog(prev => [
         ...prev,
-        { from: "system", text: "Autopilot proposed: Basic Landing Plan." }
+        {
+          from: "system",
+          text: "Autopilot proposed: Basic Landing Plan."
+        }
       ]);
       return;
     }
@@ -286,9 +314,55 @@ export default function Home() {
     ]);
   }
 
+  function restoreSnapshot(snapshotId) {
+    if (!activeProject) return;
+
+    setProjects(prev =>
+      prev.map(p => {
+        if (p.id !== activeProject.id) return p;
+        const snap = (p.history || []).find(h => h.id === snapshotId);
+        if (!snap) return p;
+        return { ...p, html: snap.html };
+      })
+    );
+
+    setChatLog(prev => [
+      ...prev,
+      { from: "system", text: "Restored snapshot in current project." }
+    ]);
+  }
+
+  function forkSnapshot(snapshotId) {
+    if (!activeProject) return;
+
+    setProjects(prev => {
+      const source = prev.find(p => p.id === activeProject.id);
+      const snap = source?.history?.find(h => h.id === snapshotId);
+      if (!source || !snap) return prev;
+
+      const id = Date.now();
+      const forked = {
+        id,
+        name: source.name + " (fork)",
+        type: source.type,
+        html: snap.html,
+        history: [snap]
+      };
+
+      return [...prev, forked];
+    });
+
+    setChatLog(prev => [
+      ...prev,
+      { from: "system", text: "Forked snapshot into new project." }
+    ]);
+  }
+
+  const activeHistory = activeProject?.history || [];
+
   return (
     <div className="app">
-      {/* FLOATING AI TOOLBAR */}
+      {/* Floating AI Toolbar */}
       <div className="toolbarC">
         <button onClick={() => handleToolbarClick("suggest")}>Suggest</button>
         <button onClick={() => handleToolbarClick("actions")}>Actions</button>
@@ -301,7 +375,7 @@ export default function Home() {
       </div>
 
       <header className="app-header">
-        <h1>AI Sandbox v1.5</h1>
+        <h1>AI Sandbox v1.6</h1>
         <div className="app-header-actions">
           <button onClick={() => addProject("simple")}>+ Simple Site</button>
           <button onClick={() => addProject("fx")}>+ FX Site</button>
@@ -309,7 +383,7 @@ export default function Home() {
       </header>
 
       <main className="layout">
-        {/* LEFT PANEL */}
+        {/* LEFT: Projects */}
         <section className="panel panel-list">
           <h2>Projects</h2>
           <ul className="project-list">
@@ -329,11 +403,10 @@ export default function Home() {
           </ul>
         </section>
 
-        {/* CENTER PANEL */}
+        {/* CENTER: Chat + History */}
         <section className="panel panel-chat">
           <h2>Chat / Commands</h2>
 
-          {/* RECENT COMMANDS */}
           {recentCommands.length > 0 && (
             <div className="recent-commands">
               <div className="recent-title">Recent Commands:</div>
@@ -351,6 +424,34 @@ export default function Home() {
             </div>
           )}
 
+          {activeHistory.length > 0 && (
+            <div className="history-panel">
+              <div className="history-title">History (last 5 snapshots):</div>
+              {activeHistory.slice(0, 5).map(snap => (
+                <div key={snap.id} className="history-item">
+                  <div className="history-meta">
+                    <div className="history-label">{snap.label}</div>
+                    <div className="history-time">{snap.timestamp}</div>
+                  </div>
+                  <div className="history-actions">
+                    <button
+                      className="history-btn"
+                      onClick={() => restoreSnapshot(snap.id)}
+                    >
+                      Restore
+                    </button>
+                    <button
+                      className="history-btn"
+                      onClick={() => forkSnapshot(snap.id)}
+                    >
+                      Fork
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div className="chat-log">
             {chatLog.map((m, i) => (
               <div key={i} className={`chat-msg ${m.from}`}>
@@ -359,11 +460,14 @@ export default function Home() {
             ))}
           </div>
 
-          {/* PENDING ACTION BOX */}
           {pendingCommand && (
             <div className="pending-box">
-              <div className="pending-title">Pending Action — approve to apply:</div>
-              <div className="pending-desc">{describeCommand(pendingCommand)}</div>
+              <div className="pending-title">
+                Pending Action — approve to apply:
+              </div>
+              <div className="pending-desc">
+                {describeCommand(pendingCommand)}
+              </div>
               <button
                 className="pending-btn"
                 onClick={() => applyCommand(pendingCommand)}
@@ -384,7 +488,7 @@ export default function Home() {
           </form>
         </section>
 
-        {/* PREVIEW PANEL */}
+        {/* RIGHT: Preview */}
         <section className="panel panel-preview">
           <h2>Preview</h2>
           <div className="preview-frame">
