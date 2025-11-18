@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+// ------------------ TEMPLATES ------------------
 const TEMPLATES = {
   blank: `
     <section class="sandbox-section">
@@ -11,17 +12,14 @@ const TEMPLATES = {
     <section class="sandbox-section">
       <header><h1>FX Site</h1></header>
     </section>
-
     <section class="sandbox-section">
       <h2>Live Converter</h2>
       <p>[converter placeholder]</p>
     </section>
-
     <section class="sandbox-section">
       <h2>Live Rates</h2>
       <p>[rates placeholder]</p>
     </section>
-
     <section class="sandbox-section">
       <p>About · Privacy</p>
     </section>
@@ -30,12 +28,10 @@ const TEMPLATES = {
     <section class="sandbox-section">
       <header><h1>Simple Landing</h1></header>
     </section>
-
     <section class="sandbox-section">
       <h2>Headline</h2>
       <p>Explain your value here.</p>
     </section>
-
     <section class="sandbox-section">
       <p>Contact · Terms</p>
     </section>
@@ -51,11 +47,11 @@ function buildCommandFromText(text) {
       type: "ADD_SECTION",
       display: "add about",
       html: `
-      <section class="sandbox-section">
-        <h2>About</h2>
-        <p>Write about your project here.</p>
-      </section>
-    `
+        <section class="sandbox-section">
+          <h2>About</h2>
+          <p>Write about your project here.</p>
+        </section>
+      `
     };
   }
 
@@ -64,11 +60,11 @@ function buildCommandFromText(text) {
       type: "ADD_SECTION",
       display: "add pricing",
       html: `
-      <section class="sandbox-section">
-        <h2>Pricing</h2>
-        <p>Basic · Pro · Enterprise.</p>
-      </section>
-    `
+        <section class="sandbox-section">
+          <h2>Pricing</h2>
+          <p>Basic · Pro · Enterprise.</p>
+        </section>
+      `
     };
   }
 
@@ -109,20 +105,20 @@ function expandAutopilotPlan(plan) {
       {
         type: "ADD_SECTION",
         html: `
-        <section class="sandbox-section">
-          <h2>About</h2>
-          <p>Write about your project here.</p>
-        </section>
-      `
+          <section class="sandbox-section">
+            <h2>About</h2>
+            <p>Write about your project here.</p>
+          </section>
+        `
       },
       {
         type: "ADD_SECTION",
         html: `
-        <section class="sandbox-section">
-          <h2>Pricing</h2>
-          <p>Basic · Pro · Enterprise.</p>
-        </section>
-      `
+          <section class="sandbox-section">
+            <h2>Pricing</h2>
+            <p>Basic · Pro · Enterprise.</p>
+          </section>
+        `
       }
     ];
   }
@@ -131,6 +127,8 @@ function expandAutopilotPlan(plan) {
 
 // ---------------- HOME COMPONENT ----------------
 export default function Home() {
+
+  // ---------- STATE ----------
   const [projects, setProjects] = useState([
     {
       id: 1,
@@ -150,6 +148,7 @@ export default function Home() {
         "Welcome to AI Sandbox v1.8 (Command Palette + Guided Wizard + Snapshots)."
     }
   ]);
+
   const [pendingCommand, setPendingCommand] = useState(null);
   const [recentCommands, setRecentCommands] = useState([]);
 
@@ -162,14 +161,14 @@ export default function Home() {
   const [showHelp, setShowHelp] = useState(false);
   const [showTips, setShowTips] = useState(true);
 
-  // Command Palette state
+  // Command Palette
   const [showPalette, setShowPalette] = useState(false);
   const [paletteQuery, setPaletteQuery] = useState("");
 
   const activeProject = projects.find(p => p.id === activeId);
   const activeHistory = activeProject?.history || [];
 
-  // ------------ Recent Commands ------------
+  // ---------- RECENT COMMANDS ----------
   function addRecentCommand(display) {
     if (!display) return;
     setRecentCommands(prev => {
@@ -178,7 +177,7 @@ export default function Home() {
     });
   }
 
-  // ------------ Add Project ------------
+  // ---------- ADD PROJECT ----------
   function addProject(type) {
     const id = Date.now();
     const name = type === "fx" ? "New FX Site" : "New Blank Site";
@@ -197,7 +196,7 @@ export default function Home() {
     setPendingCommand(null);
   }
 
-  // ------------ Chat Submit ------------
+  // ---------- CHAT SUBMIT ----------
   function handleChatSubmit(e) {
     e.preventDefault();
     if (!chatInput.trim()) return;
@@ -229,12 +228,11 @@ export default function Home() {
     ]);
   }
 
-  // ------------ Apply Commands ------------
+  // ---------- APPLY COMMANDS ----------
   function applySingleCommand(cmd, currentHtml) {
     let html = currentHtml || "";
 
     if (cmd.type === "ADD_SECTION") html += cmd.html;
-
     if (cmd.type === "SET_TEMPLATE" && TEMPLATES[cmd.template])
       html = TEMPLATES[cmd.template];
 
@@ -296,7 +294,7 @@ export default function Home() {
     }, 120);
   }
 
-  // ------------ Toolbar Actions ------------
+  // ---------- TOOLBAR ----------
   function handleToolbarClick(actionId) {
     if (actionId === "autopilot") {
       const cmd = {
@@ -326,84 +324,66 @@ export default function Home() {
       ...prev,
       { from: "system", text: `Toolbar clicked: ${actionId}` }
     ]);
-  }
-
-  // ------------ Recent Command Tap ------------
+  }  // ---------- RECENT COMMAND TAPS ----------
   function applyRecent(display) {
     const cmd = buildCommandFromText(display);
     if (!cmd) return;
-
     addRecentCommand(cmd.display);
     setPendingCommand(cmd);
-
     setChatLog(prev => [
       ...prev,
       { from: "system", text: "Proposed (Recent): " + describeCommand(cmd) }
     ]);
   }
 
-  // ------------ Snapshots ------------
+  // ---------- SNAPSHOTS ----------
   function restoreSnapshot(snapshotId) {
     if (!activeProject) return;
-
     setProjects(prev =>
       prev.map(p => {
         if (p.id !== activeProject.id) return p;
-        const snap = (p.history || []).find(h => h.id === snapshotId);
-        if (!snap) return p;
-        return { ...p, html: snap.html };
+        const snap = p.history.find(h => h.id === snapshotId);
+        return snap ? { ...p, html: snap.html } : p;
       })
     );
-
-    setChatLog(prev => [
-      ...prev,
-      { from: "system", text: "Restored snapshot in current project." }
-    ]);
+    setChatLog(prev => [...prev, { from: "system", text: "Restored snapshot." }]);
   }
 
   function forkSnapshot(snapshotId) {
     if (!activeProject) return;
-
-    setProjects(prev => {
-      const source = prev.find(p => p.id === activeProject.id);
-      const snap = source?.history?.find(h => h.id === snapshotId);
-      if (!source || !snap) return prev;
-
-      const id = Date.now();
-      const forked = {
+    const source = projects.find(p => p.id === activeProject.id);
+    const snap = source?.history?.find(h => h.id === snapshotId);
+    if (!snap) return;
+    const id = Date.now();
+    setProjects(prev => [
+      ...prev,
+      {
         id,
         name: source.name + " (fork)",
         type: source.type,
         html: snap.html,
         history: [snap]
-      };
-
-      return [...prev, forked];
-    });
-
-    setChatLog(prev => [
-      ...prev,
-      { from: "system", text: "Forked snapshot into new project." }
+      }
     ]);
+    setChatLog(prev => [...prev, { from: "system", text: "Forked snapshot." }]);
   }
 
-  // ------------ I'm Stuck ------------
+  // ---------- I'M STUCK ----------
   function handleStuck() {
     const suggestions = [
-      "Try 'autopilot' to let the AI build a full landing page.",
-      "Use the Wizard (Structure button or Wizard button) to go step-by-step.",
-      "Add a section with 'add about' or 'add pricing'.",
-      "Use snapshots to experiment safely — History → Restore or Fork."
+      "Try 'autopilot' to build a full landing page.",
+      "Use the Wizard for step-by-step creation.",
+      "Try 'add about' or 'add pricing'.",
+      "Use History to undo safely."
     ];
-
     setChatLog(prev => [
       ...prev,
-      { from: "system", text: "You pressed 'I'm Stuck' — here are next steps:" },
+      { from: "system", text: "You pressed 'I'm Stuck'. Here’s help:" },
       ...suggestions.map(s => ({ from: "system", text: "• " + s }))
     ]);
   }
 
-  // ------------ Wizard Controls ------------
+  // ---------- WIZARD ----------
   function startWizard() {
     setShowWizard(true);
     setWizardStep(1);
@@ -411,7 +391,6 @@ export default function Home() {
     setWizardPlan("basic-landing");
   }
 
-  function wizardNext() {    // ------------ wizardNext CONTINUED ------------
   function wizardNext() {
     if (wizardStep === 1) {
       setWizardStep(2);
@@ -419,10 +398,8 @@ export default function Home() {
     }
     if (wizardStep === 2) {
       const id = Date.now();
-      const html =
-        wizardType === "fx" ? TEMPLATES.fx : TEMPLATES.blank;
-      const name =
-        wizardType === "fx" ? "Wizard FX Site" : "Wizard Site";
+      const html = wizardType === "fx" ? TEMPLATES.fx : TEMPLATES.blank;
+      const name = wizardType === "fx" ? "Wizard FX Site" : "Wizard Site";
 
       setProjects(prev => [
         ...prev,
@@ -435,17 +412,13 @@ export default function Home() {
         plan: wizardPlan,
         display: "autopilot"
       };
-
       setPendingCommand(cmd);
 
       setChatLog(prev => [
         ...prev,
         {
           from: "system",
-          text:
-            "Wizard: created " +
-            name +
-            " and proposed Autopilot plan. Approve to build."
+          text: `Wizard created ${name}. Approve to build with Autopilot.`
         }
       ]);
 
@@ -454,17 +427,13 @@ export default function Home() {
   }
 
   function wizardBack() {
-    if (wizardStep === 2) {
-      setWizardStep(1);
-      return;
-    }
+    if (wizardStep === 2) return setWizardStep(1);
     setShowWizard(false);
   }
 
-  // ------------ Wizard Modal ------------
+  // ---------- WIZARD MODAL ----------
   function WizardModal() {
     if (!showWizard) return null;
-
     return (
       <div className="wizard-overlay">
         <div className="wizard-modal">
@@ -506,14 +475,11 @@ export default function Home() {
                   Autopilot Basic Landing
                 </button>
               </div>
-              <div style={{ fontSize: "0.75rem", opacity: 0.8 }}>
-                The AI will propose the plan and you approve it — no code, no risk.
-              </div>
             </>
           )}
 
           <div className="wizard-actions">
-            <button onClick={wizardBack}>Back / Close</button>
+            <button onClick={wizardBack}>Back</button>
             <button onClick={wizardNext}>{wizardStep === 2 ? "Finish" : "Next"}</button>
           </div>
         </div>
@@ -521,28 +487,24 @@ export default function Home() {
     );
   }
 
-  // ------------ Help Modal ------------
+  // ---------- HELP MODAL ----------
   function HelpModal() {
     if (!showHelp) return null;
-
     return (
       <div className="help-overlay">
         <div className="help-modal">
           <div className="help-title">How This Sandbox Works</div>
           <div className="help-body">
-            <p>This is your AI website-building cockpit. You can:</p>
+            <p>You can:</p>
             <ul>
-              <li>Create sites using the top-right buttons.</li>
-              <li>
-                Type commands like <code>add about</code>, <code>add pricing</code>,{" "}
-                <code>make fx</code>, <code>simplify</code>, or <code>autopilot</code>.
-              </li>
-              <li>Approve actions from the Pending Action box.</li>
-              <li>Use the Wizard if you’re unsure what to do next.</li>
-              <li>Use History to restore or fork previous versions.</li>
+              <li>Create sites using the toolbar buttons</li>
+              <li>Type commands like “add about”, “add pricing”, “make fx”</li>
+              <li>Approve changes safely in Pending Actions</li>
+              <li>Use History to restore or fork</li>
+              <li>Use the Wizard for guided builds</li>
             </ul>
             <p style={{ opacity: 0.8 }}>
-              Tip: Don’t reload — your work stays until replaced from GitHub.
+              Tip: Do not reload while building — your project stays until replaced.
             </p>
           </div>
           <div className="help-actions">
@@ -553,15 +515,13 @@ export default function Home() {
     );
   }
 
-  // ------------ Tips Bar ------------
+  // ---------- TIPS BAR ----------
   function TipsBar() {
     if (!showTips) return null;
-
     return (
       <div className="tips-bar">
         <div className="tips-text">
-          Tip: Start with the Wizard or type <code>autopilot</code>. Approve changes in
-          the Pending box. Use History to undo safely.
+          Tip: Try the Wizard or use 'autopilot'. Approve changes safely in Pending.
         </div>
         <button className="tips-dismiss" onClick={() => setShowTips(false)}>
           Got it
@@ -570,79 +530,18 @@ export default function Home() {
     );
   }
 
-  // ------------ COMMAND PALETTE ------------
+  // ---------- COMMAND PALETTE ----------
   function CommandPalette() {
     if (!showPalette) return null;
 
     const ACTIONS = [
-      {
-        id: "add-about",
-        label: "Add About Section",
-        action: () => {
-          const cmd = buildCommandFromText("add about");
-          setPendingCommand(cmd);
-          setShowPalette(false);
-        }
-      },
-      {
-        id: "add-pricing",
-        label: "Add Pricing Section",
-        action: () => {
-          const cmd = buildCommandFromText("add pricing");
-          setPendingCommand(cmd);
-          setShowPalette(false);
-        }
-      },
-      {
-        id: "make-fx",
-        label: "Switch to FX Template",
-        action: () => {
-          const cmd = buildCommandFromText("make fx");
-          setPendingCommand(cmd);
-          setShowPalette(false);
-        }
-      },
-      {
-        id: "simplify",
-        label: "Switch to Simple Template",
-        action: () => {
-          const cmd = buildCommandFromText("simplify");
-          setPendingCommand(cmd);
-          setShowPalette(false);
-        }
-      },
-      {
-        id: "autopilot",
-        label: "Run Autopilot",
-        action: () => {
-          const cmd = buildCommandFromText("autopilot");
-          setPendingCommand(cmd);
-          setShowPalette(false);
-        }
-      },
-      {
-        id: "wizard",
-        label: "Start Guided Wizard",
-        action: () => {
-          setShowPalette(false);
-          startWizard();
-        }
-      },
-      {
-        id: "help",
-        label: "Open Help",
-        action: () => {
-          setShowPalette(false);
-          setShowHelp(true);
-        }
-      },
-      {
-        id: "snapshots",
-        label: "Show Snapshots",
-        action: () => {
-          setShowPalette(false);
-        }
-      }
+      { id: "add-about", label: "Add About Section", action: () => { setPendingCommand(buildCommandFromText("add about")); setShowPalette(false); }},
+      { id: "add-pricing", label: "Add Pricing Section", action: () => { setPendingCommand(buildCommandFromText("add pricing")); setShowPalette(false); }},
+      { id: "make-fx", label: "Switch to FX Template", action: () => { setPendingCommand(buildCommandFromText("make fx")); setShowPalette(false); }},
+      { id: "simplify", label: "Switch to Simple Template", action: () => { setPendingCommand(buildCommandFromText("simplify")); setShowPalette(false); }},
+      { id: "autopilot", label: "Run Autopilot", action: () => { setPendingCommand(buildCommandFromText("autopilot")); setShowPalette(false); }},
+      { id: "wizard", label: "Start Wizard", action: () => { setShowPalette(false); startWizard(); }},
+      { id: "help", label: "Open Help", action: () => { setShowPalette(false); setShowHelp(true); }}
     ];
 
     const filtered = ACTIONS.filter(a =>
@@ -659,14 +558,12 @@ export default function Home() {
             value={paletteQuery}
             onChange={e => setPaletteQuery(e.target.value)}
           />
-
           <div className="palette-actions">
             {filtered.map(a => (
               <button key={a.id} className="palette-btn" onClick={a.action}>
                 {a.label}
               </button>
             ))}
-
             {filtered.length === 0 && (
               <div className="palette-empty">No matching actions.</div>
             )}
@@ -674,10 +571,11 @@ export default function Home() {
         </div>
       </div>
     );
-  }  // ------------ MAIN RETURN ------------
+  }
+
+  // ---------- MAIN RETURN ----------
   return (
     <div className="app">
-      {/* Floating Toolbar C */}
       <div className="toolbarC">
         <button onClick={() => handleToolbarClick("suggest")}>Suggest</button>
         <button onClick={() => handleToolbarClick("actions")}>Actions</button>
@@ -700,7 +598,7 @@ export default function Home() {
       </header>
 
       <main className="layout">
-        {/* LEFT PANEL */}
+        {/* LEFT */}
         <section className="panel panel-list">
           <h2>Projects</h2>
           <ul className="project-list">
@@ -720,7 +618,7 @@ export default function Home() {
           </ul>
         </section>
 
-        {/* CENTER PANEL */}
+        {/* CENTER */}
         <section className="panel panel-chat">
           <h2>Chat / Commands</h2>
 
@@ -731,11 +629,7 @@ export default function Home() {
               <div className="recent-title">Recent Commands:</div>
               <div className="recent-row">
                 {recentCommands.map((r, i) => (
-                  <button
-                    key={i}
-                    className="recent-btn"
-                    onClick={() => applyRecent(r)}
-                  >
+                  <button key={i} className="recent-btn" onClick={() => applyRecent(r)}>
                     {r}
                   </button>
                 ))}
@@ -753,16 +647,10 @@ export default function Home() {
                     <div className="history-time">{snap.timestamp}</div>
                   </div>
                   <div className="history-actions">
-                    <button
-                      className="history-btn"
-                      onClick={() => restoreSnapshot(snap.id)}
-                    >
+                    <button className="history-btn" onClick={() => restoreSnapshot(snap.id)}>
                       Restore
                     </button>
-                    <button
-                      className="history-btn"
-                      onClick={() => forkSnapshot(snap.id)}
-                    >
+                    <button className="history-btn" onClick={() => forkSnapshot(snap.id)}>
                       Fork
                     </button>
                   </div>
@@ -783,10 +671,7 @@ export default function Home() {
             <div className="pending-box">
               <div className="pending-title">Pending Action — approve to apply:</div>
               <div className="pending-desc">{describeCommand(pendingCommand)}</div>
-              <button
-                className="pending-btn"
-                onClick={() => applyCommand(pendingCommand)}
-              >
+              <button className="pending-btn" onClick={() => applyCommand(pendingCommand)}>
                 ✅ Approve & Apply
               </button>
             </div>
@@ -803,7 +688,7 @@ export default function Home() {
           </form>
         </section>
 
-        {/* RIGHT PANEL */}
+        {/* RIGHT */}
         <section className="panel panel-preview">
           <h2>Preview</h2>
           <div className="preview-frame">
@@ -818,15 +703,16 @@ export default function Home() {
             )}
           </div>
 
-          {/* Publish warning tip */}
           <div className="publish-tip">
-            <small style={{
-              display: "block",
-              marginTop: "6px",
-              fontSize: "0.72rem",
-              opacity: 0.75,
-              color: "#9cb3ff"
-            }}>
+            <small
+              style={{
+                display: "block",
+                marginTop: "6px",
+                fontSize: "0.72rem",
+                opacity: 0.75,
+                color: "#9cb3ff"
+              }}
+            >
               Tip: Don’t publish until your site is fully final.<br />
               Each publish uses 1 of your monthly free publishes.
             </small>
@@ -834,12 +720,12 @@ export default function Home() {
         </section>
       </main>
 
-      {/* Overlays */}
+      {/* OVERLAYS */}
       <WizardModal />
       <HelpModal />
       <CommandPalette />
 
-      {/* Stuck button */}
+      {/* STUCK BUTTON */}
       <button className="stuck-btn" onClick={handleStuck}>
         I’m Stuck
       </button>
