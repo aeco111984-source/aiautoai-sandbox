@@ -99,6 +99,12 @@ function describeCommand(cmd) {
   if (cmd.type === "AUTOPILOT_PLAN")
     return "Run Autopilot Basic Landing Page Plan.";
 
+  if (cmd.type === "SMART_SUGGEST") {
+    if (cmd.level === "light") return "Light Suggest — 3 small improvements.";
+    if (cmd.level === "deep") return "Deep Suggest — 7 stronger improvements.";
+    if (cmd.level === "ultra") return "Ultra Boost — full co-designer plan.";
+  }
+
   return "Unknown action.";
 }
 
@@ -131,9 +137,73 @@ function expandAutopilotPlan(plan) {
   return [];
 }
 
-// ---------------- HOME COMPONENT ----------------
+// -------------- SMART SUGGEST ENGINE --------------
+function buildSmartSuggestCommand(level, projectHtml) {
+  const html = (projectHtml || "").toLowerCase();
+  const suggestions = [];
+
+  // UX tweaks (just textual suggestions)
+  const uxTweaks = [
+    "Improve spacing between sections.",
+    "Make headings more consistent.",
+    "Add a clear call-to-action button."
+  ];
+
+  // Missing sections
+  const missing = [];
+  if (!html.includes("<h2>about")) missing.push("Consider adding an About section.");
+  if (!html.includes("<h2>pricing")) missing.push("Consider adding a Pricing section.");
+  if (!html.includes("<h2>faq")) missing.push("Consider adding an FAQ section (common questions).");
+
+  // Content improvements
+  const contentTweaks = [
+    "Clarify your headline so it says exactly who this is for.",
+    "Tighten the copy in the main paragraph to be more direct.",
+    "Add one short testimonial or proof point."
+  ];
+
+  // Design improvements
+  const designTweaks = [
+    "Use fewer colours and let one accent colour lead.",
+    "Increase section padding for more breathing room.",
+    "Strengthen visual hierarchy by emphasising key text."
+  ];
+
+  if (level === "light") {
+    // Light: pick 3 small suggestions across the set
+    suggestions.push(uxTweaks[0]);
+    if (missing[0]) suggestions.push(missing[0]);
+    suggestions.push(contentTweaks[0]);
+  }
+
+  if (level === "deep") {
+    // Deep: combine multiple categories, target 7 suggestions
+    suggestions.push(...uxTweaks);
+    if (missing[0]) suggestions.push(missing[0]);
+    if (missing[1]) suggestions.push(missing[1]);
+    suggestions.push(contentTweaks[0]);
+    suggestions.push(designTweaks[0]);
+  }
+
+  if (level === "ultra") {
+    // Ultra: offer the 4 Ultra modes as options (handled in UI, not here)
+    suggestions.push(
+      "Ultra: Full UX audit (flow, navigation, clarity).",
+      "Ultra: Full content improvement plan.",
+      "Ultra: Section expansion (About, FAQ, Testimonials, etc.).",
+      "Ultra: Design & layout upgrade plan."
+    );
+  }
+
+  return {
+    type: "SMART_SUGGEST",
+    level,
+    suggestions
+  };
+}
+
+// ---------------- MAIN COMPONENT ----------------
 export default function Home() {
-  // ---------- STATE ----------
   const [projects, setProjects] = useState([
     {
       id: 1,
@@ -151,7 +221,7 @@ export default function Home() {
     {
       from: "system",
       text:
-        "Welcome to AI Sandbox v1.8 (Command Palette + Guided Wizard + Snapshots)."
+        "Welcome to AI Sandbox v1.9 (Suggest Light / Deep / Ultra + Command Palette + Guided Wizard + Snapshots)."
     }
   ]);
 
@@ -168,6 +238,9 @@ export default function Home() {
 
   const [showPalette, setShowPalette] = useState(false);
   const [paletteQuery, setPaletteQuery] = useState("");
+
+  // NEW: Suggest dropdown state
+  const [showSuggestMenu, setShowSuggestMenu] = useState(false);
 
   const activeProject = projects.find(p => p.id === activeId);
   const activeHistory = activeProject?.history || [];
@@ -229,7 +302,9 @@ export default function Home() {
       ...prev,
       { from: "system", text: "Proposed: " + describeCommand(cmd) }
     ]);
-  }  // ---------------- APPLY COMMAND ----------------
+  }
+
+  // ---------------- APPLY COMMAND ----------------
   function applySingleCommand(cmd, html) {
     let output = html || "";
 
@@ -246,6 +321,20 @@ export default function Home() {
 
     const project = projects.find(p => p.id === activeId);
     if (!project) return;
+
+    // Handle suggestions (these DO NOT auto-mutate HTML)
+    if (cmd.type === "SMART_SUGGEST") {
+      setChatLog(prev => [
+        ...prev,
+        {
+          from: "system",
+          text: `Suggestions (${cmd.level}):`
+        },
+        ...cmd.suggestions.map(s => ({ from: "system", text: "• " + s }))
+      ]);
+      setPendingCommand(null);
+      return;
+    }
 
     const cmds =
       cmd.type === "AUTOPILOT_PLAN"
@@ -279,8 +368,6 @@ export default function Home() {
       })
     );
 
-    setPendingCommand(null);
-
     setChatLog(prev => [
       ...prev,
       {
@@ -292,13 +379,10 @@ export default function Home() {
       }
     ]);
 
-    setTimeout(() => {
-      const iframe = document.querySelector("iframe");
-      iframe?.contentWindow?.scrollTo(0, 999999);
-    }, 150);
+    setPendingCommand(null);
   }
 
-  // ---------------- APPLY RECENT COMMAND ----------------
+  // ---------------- RECENT COMMANDS ----------------
   function applyRecent(text) {
     const cmd = buildCommandFromText(text);
     if (!cmd) return;
@@ -311,7 +395,7 @@ export default function Home() {
     ]);
   }
 
-  // ---------------- SNAPSHOTS ----------------
+  // -------------- SNAPSHOTS --------------
   function restoreSnapshot(id) {
     const project = projects.find(p => p.id === activeId);
     if (!project) return;
@@ -325,21 +409,24 @@ export default function Home() {
       )
     );
 
-    setChatLog(prev => [...prev, { from: "system", text: "Snapshot restored." }]);
+    setChatLog(prev => [
+      ...prev,
+      { from: "system", text: "Snapshot restored." }
+    ]);
   }
 
   function forkSnapshot(id) {
-    const source = projects.find(p => p.id === activeId);
-    if (!source) return;
+    const project = projects.find(p => p.id === activeId);
+    if (!project) return;
 
-    const snap = source.history.find(h => h.id === id);
+    const snap = project.history.find(h => h.id === id);
     if (!snap) return;
 
     const newId = Date.now();
     const forked = {
       id: newId,
-      name: source.name + " (fork)",
-      type: source.type,
+      name: project.name + " (fork)",
+      type: project.type,
       html: snap.html,
       history: [snap]
     };
@@ -363,7 +450,7 @@ export default function Home() {
 
     setChatLog(prev => [
       ...prev,
-      { from: "system", text: "You pressed 'I'm Stuck' — here’s help:" },
+      { from: "system", text: "You're stuck? Try this:" },
       ...tips.map(t => ({ from: "system", text: "• " + t }))
     ]);
   }
@@ -408,7 +495,7 @@ export default function Home() {
         ...prev,
         {
           from: "system",
-          text: `Wizard: created ${name} → Approve to run Autopilot.`
+          text: `Wizard: created ${name}. Approve to run Autopilot.`
         }
       ]);
 
@@ -419,9 +506,7 @@ export default function Home() {
   function wizardBack() {
     if (wizardStep === 2) return setWizardStep(1);
     setShowWizard(false);
-  }
-
-  // ---------------- WIZARD MODAL ----------------
+  }  // ---------------- WIZARD MODAL ----------------
   function WizardModal() {
     if (!showWizard) return null;
 
@@ -433,26 +518,18 @@ export default function Home() {
 
           {wizardStep === 1 && (
             <>
-              <p className="wizard-step">
-                What type of site do you want to build?
-              </p>
+              <p className="wizard-step">What type of site do you want to build?</p>
 
               <div className="wizard-options">
                 <button
-                  className={
-                    "wizard-btn " +
-                    (wizardType === "simple" ? "selected" : "")
-                  }
+                  className={"wizard-btn " + (wizardType === "simple" ? "selected" : "")}
                   onClick={() => setWizardType("simple")}
                 >
                   Simple Landing Page
                 </button>
 
                 <button
-                  className={
-                    "wizard-btn " +
-                    (wizardType === "fx" ? "selected" : "")
-                  }
+                  className={"wizard-btn " + (wizardType === "fx" ? "selected" : "")}
                   onClick={() => setWizardType("fx")}
                 >
                   FX / Finance Site
@@ -463,16 +540,11 @@ export default function Home() {
 
           {wizardStep === 2 && (
             <>
-              <p className="wizard-step">
-                How should the page be built?
-              </p>
+              <p className="wizard-step">How should the page be built?</p>
 
               <div className="wizard-options">
                 <button
-                  className={
-                    "wizard-btn " +
-                    (wizardPlan === "basic-landing" ? "selected" : "")
-                  }
+                  className={"wizard-btn " + (wizardPlan === "basic-landing" ? "selected" : "")}
                   onClick={() => setWizardPlan("basic-landing")}
                 >
                   Autopilot Basic Landing
@@ -487,9 +559,7 @@ export default function Home() {
 
           <div className="wizard-actions">
             <button onClick={wizardBack}>Back</button>
-            <button onClick={wizardNext}>
-              {wizardStep === 2 ? "Finish" : "Next"}
-            </button>
+            <button onClick={wizardNext}>{wizardStep === 2 ? "Finish" : "Next"}</button>
           </div>
         </div>
       </div>
@@ -508,21 +578,71 @@ export default function Home() {
           <div className="help-body">
             <p>You can:</p>
             <ul>
-              <li>Create sites using toolbar</li>
-              <li>Use simple AI commands</li>
-              <li>Approve actions safely</li>
-              <li>Use Wizard for guided creation</li>
-              <li>Restore previous versions via History</li>
+              <li>Create new sites (Simple or FX)</li>
+              <li>Use commands like “add about”, “add pricing”, “make fx”</li>
+              <li>Approve actions safely in Pending</li>
+              <li>Use Wizard for guided building</li>
+              <li>Use History to restore earlier versions</li>
+              <li>Use Suggest for AI improvements (Light, Deep, Ultra)</li>
             </ul>
 
-            <p style={{ opacity: 0.8 }}>
-              Tip: Don’t reload — your project persists until replaced.
-            </p>
+            <p style={{ opacity: 0.8 }}>Tip: Do not reload — your work stays until replaced.</p>
           </div>
 
           <div className="help-actions">
             <button onClick={() => setShowHelp(false)}>Close</button>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ---------------- SUGGEST MENU DROPDOWN ----------------
+  function SuggestMenu() {
+    if (!showSuggestMenu) return null;
+
+    return (
+      <div className="suggest-overlay" onClick={() => setShowSuggestMenu(false)}>
+        <div className="suggest-modal" onClick={(e) => e.stopPropagation()}>
+          <h3 className="suggest-title">AI Suggestions</h3>
+
+          <button
+            className="suggest-btn"
+            onClick={() => {
+              const cmd = buildSmartSuggestCommand("light", activeProject?.html);
+              setPendingCommand(cmd);
+              setShowSuggestMenu(false);
+            }}
+          >
+            ✨ Light Suggest
+          </button>
+
+          <button
+            className="suggest-btn"
+            onClick={() => {
+              const cmd = buildSmartSuggestCommand("deep", activeProject?.html);
+              setPendingCommand(cmd);
+              setShowSuggestMenu(false);
+            }}
+          >
+            🔥 Deep Suggest
+          </button>
+
+          <button
+            className="suggest-btn"
+            onClick={() => {
+              const cmd = buildSmartSuggestCommand("ultra", activeProject?.html);
+              setPendingCommand(cmd);
+              setShowSuggestMenu(false);
+            }}
+          >
+            🚀 Ultra Boost
+          </button>
+
+          <button className="suggest-close" onClick={() => setShowSuggestMenu(false)}>
+            Close
+          </button>
+
         </div>
       </div>
     );
@@ -548,13 +668,13 @@ export default function Home() {
 
     return (
       <div className="palette-overlay" onClick={() => setShowPalette(false)}>
-        <div className="palette-modal" onClick={e => e.stopPropagation()}>
+        <div className="palette-modal" onClick={(e) => e.stopPropagation()}>
           <input
             className="palette-input"
             autoFocus
             placeholder="Search actions…"
             value={paletteQuery}
-            onChange={e => setPaletteQuery(e.target.value)}
+            onChange={(e) => setPaletteQuery(e.target.value)}
           />
 
           <div className="palette-actions">
@@ -588,19 +708,33 @@ export default function Home() {
   // ---------------- MAIN RETURN ----------------
   return (
     <div className="app">
+
       {/* FLOATING TOOLBAR */}
       <div className="toolbarC">
-        <button onClick={() => handleToolbarClick("actions")}>Actions</button>
-        <button onClick={() => handleToolbarClick("macros")}>Macros</button>
-        <button onClick={() => handleToolbarClick("autopilot")}>Autopilot</button>
-        <button onClick={() => handleToolbarClick("structure")}>Wizard</button>
-        <button onClick={() => setShowHelp(true)}>Help</button>
-        <button onClick={() => setShowPalette(true)}>Palette</button>
+        <button onClick={() => setShowSuggestMenu(!showSuggestMenu)}>
+          Suggest ▼
+        </button>
+
+        <button onClick={() => handleToolbarClick("autopilot")}>
+          Autopilot
+        </button>
+
+        <button onClick={() => startWizard()}>
+          Wizard
+        </button>
+
+        <button onClick={() => setShowHelp(true)}>
+          Help
+        </button>
+
+        <button onClick={() => setShowPalette(true)}>
+          Palette
+        </button>
       </div>
 
       {/* HEADER */}
       <header className="app-header">
-        <h1>AI Sandbox v1.8</h1>
+        <h1>AI Sandbox v1.9</h1>
         <div className="app-header-actions">
           <button onClick={startWizard}>Wizard</button>
           <button onClick={() => setShowHelp(true)}>Help</button>
@@ -609,7 +743,9 @@ export default function Home() {
         </div>
       </header>
 
+      {/* MAIN LAYOUT */}
       <main className="layout">
+        
         {/* LEFT PANEL */}
         <section className="panel panel-list">
           <h2>Projects</h2>
@@ -641,7 +777,11 @@ export default function Home() {
               <div className="recent-title">Recent Commands:</div>
               <div className="recent-row">
                 {recentCommands.map((r, i) => (
-                  <button key={i} className="recent-btn" onClick={() => applyRecent(r)}>
+                  <button
+                    key={i}
+                    className="recent-btn"
+                    onClick={() => applyRecent(r)}
+                  >
                     {r}
                   </button>
                 ))}
@@ -649,9 +789,10 @@ export default function Home() {
             </div>
           )}
 
+          {/* HISTORY */}
           {activeHistory.length > 0 && (
             <div className="history-panel">
-              <div className="history-title">History (5 snapshots):</div>
+              <div className="history-title">History (last 5 snapshots):</div>
               {activeHistory.slice(0, 5).map(snap => (
                 <div key={snap.id} className="history-item">
                   <div className="history-meta">
@@ -671,6 +812,7 @@ export default function Home() {
             </div>
           )}
 
+          {/* CHAT LOG */}
           <div className="chat-log">
             {chatLog.map((m, i) => (
               <div key={i} className={`chat-msg ${m.from}`}>
@@ -679,6 +821,7 @@ export default function Home() {
             ))}
           </div>
 
+          {/* PENDING */}
           {pendingCommand && (
             <div className="pending-box">
               <div className="pending-title">Pending Action — approve to apply:</div>
@@ -692,6 +835,7 @@ export default function Home() {
             </div>
           )}
 
+          {/* INPUT */}
           <form className="chat-input-row" onSubmit={handleChatSubmit}>
             <input
               type="text"
@@ -718,7 +862,7 @@ export default function Home() {
             )}
           </div>
 
-          {/* Publish tip */}
+          {/* PUBLISH TIP */}
           <div className="publish-tip">
             <small>
               Tip: Don’t publish until your site is fully final.<br />
@@ -731,6 +875,7 @@ export default function Home() {
       {/* OVERLAYS */}
       <WizardModal />
       <HelpModal />
+      <SuggestMenu />
       <CommandPalette />
 
       {/* STUCK BUTTON */}
