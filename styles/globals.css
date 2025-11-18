@@ -1,3 +1,7 @@
+/* -------------------------------------------------------
+   GLOBAL RESET + BASE
+------------------------------------------------------- */
+
 * {
   box-sizing: border-box;
 }
@@ -16,7 +20,10 @@ html, body {
   flex-direction: column;
 }
 
-/* Floating AI Toolbar C */
+/* -------------------------------------------------------
+   FLOATING AI TOOLBAR C
+------------------------------------------------------- */
+
 .toolbarC {
   position: fixed;
   top: 0;
@@ -45,13 +52,12 @@ html, body {
   background: #1a2a4f;
 }
 
-/* Header sits below toolbar */
+/* -------------------------------------------------------
+   HEADER
+------------------------------------------------------- */
+
 .app-header {
   margin-top: 48px;
-}
-
-/* Header */
-.app-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -71,7 +77,10 @@ html, body {
   cursor: pointer;
 }
 
-/* Layout */
+/* -------------------------------------------------------
+   LAYOUT PANELS
+------------------------------------------------------- */
+
 .layout {
   flex: 1;
   display: flex;
@@ -79,7 +88,6 @@ html, body {
   min-height: 0;
 }
 
-/* Panels */
 .panel {
   border-right: 1px solid #222;
   display: flex;
@@ -95,24 +103,27 @@ html, body {
   border-bottom: 1px solid #222;
 }
 
-/* Left panel */
+/* Left Panel */
 .panel-list {
   width: 22%;
   min-width: 180px;
 }
 
-/* Chat panel */
+/* Chat Panel */
 .panel-chat {
   width: 38%;
   min-width: 220px;
 }
 
-/* Preview panel */
+/* Preview Panel */
 .panel-preview {
   flex: 1;
 }
 
-/* Project list */
+/* -------------------------------------------------------
+   PROJECT LIST
+------------------------------------------------------- */
+
 .project-list {
   list-style: none;
   margin: 0;
@@ -143,7 +154,10 @@ html, body {
   opacity: 0.7;
 }
 
-/* Chat log */
+/* -------------------------------------------------------
+   CHAT PANEL
+------------------------------------------------------- */
+
 .chat-log {
   flex: 1;
   padding: 0.5rem;
@@ -163,7 +177,7 @@ html, body {
   color: #f6d47a;
 }
 
-/* Pending command box */
+/* Pending Action Box */
 .pending-box {
   background: #142033;
   border: 1px solid #2a3b55;
@@ -192,7 +206,7 @@ html, body {
   cursor: pointer;
 }
 
-/* Chat input */
+/* Chat Input */
 .chat-input-row {
   display: flex;
   padding: 0.5rem;
@@ -219,7 +233,10 @@ html, body {
   color: #f5f5f5;
 }
 
-/* Preview */
+/* -------------------------------------------------------
+   PREVIEW PANEL
+------------------------------------------------------- */
+
 .preview-frame {
   flex: 1;
   padding: 0.5rem;
@@ -234,7 +251,19 @@ iframe {
   background: #ffffff !important;
 }
 
-/* Sections */
+.publish-tip small {
+  line-height: 1.25;
+  display: block;
+  margin-top: 6px;
+  font-size: 0.72rem;
+  opacity: 0.75;
+  color: #9cb3ff;
+}
+
+/* -------------------------------------------------------
+   SANDBOX SECTIONS
+------------------------------------------------------- */
+
 .sandbox-section {
   background: #ffffff;
   color: #000000;
@@ -246,7 +275,10 @@ iframe {
   line-height: 1.45;
 }
 
-/* Recent commands */
+/* -------------------------------------------------------
+   RECENT COMMANDS
+------------------------------------------------------- */
+
 .recent-commands {
   padding: 0.4rem 0.75rem;
   border-bottom: 1px solid #20273a;
@@ -275,7 +307,10 @@ iframe {
   cursor: pointer;
 }
 
-/* History panel */
+/* -------------------------------------------------------
+   HISTORY
+------------------------------------------------------- */
+
 .history-panel {
   padding: 0.4rem 0.75rem;
   border-bottom: 1px solid #20273a;
@@ -324,9 +359,14 @@ iframe {
   cursor: pointer;
 }
 
-/* Wizard overlay */
+/* -------------------------------------------------------
+   WIZARD + HELP MODALS
+------------------------------------------------------- */
+
 .wizard-overlay,
-.help-overlay {
+.help-overlay,
+.suggest-overlay,
+.palette-overlay {
   position: fixed;
   inset: 0;
   z-index: 10000;
@@ -337,7 +377,9 @@ iframe {
 }
 
 .wizard-modal,
-.help-modal {
+.help-modal,
+.suggest-modal,
+.palette-modal {
   width: 90%;
   max-width: 420px;
   background: #0b1020;
@@ -348,22 +390,23 @@ iframe {
 }
 
 .wizard-title,
-.help-title {
+.help-title,
+.suggest-title {
   font-size: 1rem;
   margin-bottom: 0.5rem;
 }
 
-.wizard-step {
+.wizard-step,
+.suggest-description {
   font-size: 0.8rem;
   opacity: 0.75;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.65rem;
 }
 
 .wizard-options {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  margin-bottom: 0.8rem;
 }
 
 .wizard-btn {
@@ -382,14 +425,8 @@ iframe {
   border-color: #4c6fff;
 }
 
-.wizard-actions {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 0.6rem;
-}
-
-.wizard-actions button,
-.help-actions button {
+.help-actions button,
+.wizard-actions button {
   padding: 0.4rem 0.75rem;
   font-size: 0.8rem;
   border-radius: 6px;
@@ -399,20 +436,92 @@ iframe {
   cursor: pointer;
 }
 
-/* Help modal body */
-.help-body {
-  font-size: 0.78rem;
-  line-height: 1.4;
-  opacity: 0.9;
+/* -------------------------------------------------------
+   SUGGEST MENU (Dropdown Modal)
+------------------------------------------------------- */
+
+.suggest-modal {
+  text-align: center;
 }
 
-.help-body ul {
-  padding-left: 1.1rem;
-  margin-top: 0.3rem;
-  margin-bottom: 0.3rem;
+.suggest-btn {
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  margin-bottom: 0.55rem;
+  font-size: 0.85rem;
+  border-radius: 6px;
+  border: 1px solid #2a3650;
+  background: #111b32;
+  color: #e0e6ff;
+  cursor: pointer;
 }
 
-/* Stuck button */
+.suggest-btn:hover {
+  background: #1d2c52;
+}
+
+.suggest-close {
+  margin-top: 0.4rem;
+  width: 100%;
+  padding: 0.45rem;
+  font-size: 0.8rem;
+  border-radius: 6px;
+  border: 1px solid #444;
+  background: #10182f;
+  color: #f5f5f5;
+  cursor: pointer;
+}
+
+/* -------------------------------------------------------
+   COMMAND PALETTE
+------------------------------------------------------- */
+
+.palette-modal {
+  padding: 1rem;
+}
+
+.palette-input {
+  width: 100%;
+  padding: 0.45rem;
+  margin-bottom: 0.8rem;
+  font-size: 0.85rem;
+  border-radius: 6px;
+  border: 1px solid #3a4460;
+  background: #0a0f1f;
+  color: #fff;
+}
+
+.palette-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.palette-btn {
+  padding: 0.45rem 0.6rem;
+  font-size: 0.82rem;
+  border-radius: 6px;
+  border: 1px solid #2a3650;
+  background: #111b32;
+  color: #e0e6ff;
+  cursor: pointer;
+}
+
+.palette-btn:hover {
+  background: #1d2c52;
+}
+
+.palette-empty {
+  padding: 0.35rem;
+  font-size: 0.75rem;
+  opacity: 0.7;
+  text-align: center;
+}
+
+/* -------------------------------------------------------
+   STUCK BUTTON
+------------------------------------------------------- */
+
 .stuck-btn {
   position: fixed;
   right: 12px;
@@ -427,7 +536,10 @@ iframe {
   cursor: pointer;
 }
 
-/* Tips bar */
+/* -------------------------------------------------------
+   TIPS BAR
+------------------------------------------------------- */
+
 .tips-bar {
   padding: 0.4rem 0.75rem;
   background: #071025;
@@ -452,11 +564,12 @@ iframe {
   cursor: pointer;
 }
 
-/* Mobile */
+/* -------------------------------------------------------
+   MOBILE
+------------------------------------------------------- */
+
 @media (max-width: 900px) {
-  .layout {
-    flex-direction: column;
-  }
+  .layout { flex-direction: column; }
   .panel-list,
   .panel-chat,
   .panel-preview {
