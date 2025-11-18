@@ -68,21 +68,18 @@ function buildCommandFromText(text) {
     };
   }
 
-  if (t.includes("make fx")) {
+  if (t.includes("make fx"))
     return { type: "SET_TEMPLATE", template: "fx", display: "make fx" };
-  }
 
-  if (t.includes("simplify")) {
+  if (t.includes("simplify"))
     return { type: "SET_TEMPLATE", template: "simple", display: "simplify" };
-  }
 
-  if (t.includes("autopilot")) {
+  if (t.includes("autopilot"))
     return {
       type: "AUTOPILOT_PLAN",
       plan: "basic-landing",
       display: "autopilot"
     };
-  }
 
   return null;
 }
@@ -142,27 +139,23 @@ function buildSmartSuggestCommand(level, projectHtml) {
   const html = (projectHtml || "").toLowerCase();
   const suggestions = [];
 
-  // UX tweaks (just textual suggestions)
   const uxTweaks = [
     "Improve spacing between sections.",
     "Make headings more consistent.",
     "Add a clear call-to-action button."
   ];
 
-  // Missing sections
   const missing = [];
-  if (!html.includes("<h2>about")) missing.push("Consider adding an About section.");
-  if (!html.includes("<h2>pricing")) missing.push("Consider adding a Pricing section.");
-  if (!html.includes("<h2>faq")) missing.push("Consider adding an FAQ section (common questions).");
+  if (!html.includes("<h2>about")) missing.push("Add an About section.");
+  if (!html.includes("<h2>pricing")) missing.push("Add a Pricing section.");
+  if (!html.includes("<h2>faq")) missing.push("Add an FAQ section.");
 
-  // Content improvements
   const contentTweaks = [
     "Clarify your headline so it says exactly who this is for.",
-    "Tighten the copy in the main paragraph to be more direct.",
+    "Tighten the main paragraph to be more direct.",
     "Add one short testimonial or proof point."
   ];
 
-  // Design improvements
   const designTweaks = [
     "Use fewer colours and let one accent colour lead.",
     "Increase section padding for more breathing room.",
@@ -170,14 +163,12 @@ function buildSmartSuggestCommand(level, projectHtml) {
   ];
 
   if (level === "light") {
-    // Light: pick 3 small suggestions across the set
     suggestions.push(uxTweaks[0]);
     if (missing[0]) suggestions.push(missing[0]);
     suggestions.push(contentTweaks[0]);
   }
 
   if (level === "deep") {
-    // Deep: combine multiple categories, target 7 suggestions
     suggestions.push(...uxTweaks);
     if (missing[0]) suggestions.push(missing[0]);
     if (missing[1]) suggestions.push(missing[1]);
@@ -186,9 +177,8 @@ function buildSmartSuggestCommand(level, projectHtml) {
   }
 
   if (level === "ultra") {
-    // Ultra: offer the 4 Ultra modes as options (handled in UI, not here)
     suggestions.push(
-      "Ultra: Full UX audit (flow, navigation, clarity).",
+      "Ultra: Full UX audit (flow, clarity, navigation).",
       "Ultra: Full content improvement plan.",
       "Ultra: Section expansion (About, FAQ, Testimonials, etc.).",
       "Ultra: Design & layout upgrade plan."
@@ -239,7 +229,6 @@ export default function Home() {
   const [showPalette, setShowPalette] = useState(false);
   const [paletteQuery, setPaletteQuery] = useState("");
 
-  // NEW: Suggest dropdown state
   const [showSuggestMenu, setShowSuggestMenu] = useState(false);
 
   const activeProject = projects.find(p => p.id === activeId);
@@ -302,14 +291,11 @@ export default function Home() {
       ...prev,
       { from: "system", text: "Proposed: " + describeCommand(cmd) }
     ]);
-  }
-
-  // ---------------- APPLY COMMAND ----------------
+  }  // ---------------- APPLY COMMAND ----------------
   function applySingleCommand(cmd, html) {
     let output = html || "";
 
     if (cmd.type === "ADD_SECTION") output += cmd.html;
-
     if (cmd.type === "SET_TEMPLATE" && TEMPLATES[cmd.template])
       output = TEMPLATES[cmd.template];
 
@@ -322,14 +308,11 @@ export default function Home() {
     const project = projects.find(p => p.id === activeId);
     if (!project) return;
 
-    // Handle suggestions (these DO NOT auto-mutate HTML)
+    // Handle Suggest features (these do NOT mutate HTML)
     if (cmd.type === "SMART_SUGGEST") {
       setChatLog(prev => [
         ...prev,
-        {
-          from: "system",
-          text: `Suggestions (${cmd.level}):`
-        },
+        { from: "system", text: `Suggestions (${cmd.level}):` },
         ...cmd.suggestions.map(s => ({ from: "system", text: "• " + s }))
       ]);
       setPendingCommand(null);
@@ -386,6 +369,7 @@ export default function Home() {
   function applyRecent(text) {
     const cmd = buildCommandFromText(text);
     if (!cmd) return;
+
     addRecentCommand(cmd.display);
     setPendingCommand(cmd);
 
@@ -395,7 +379,7 @@ export default function Home() {
     ]);
   }
 
-  // -------------- SNAPSHOTS --------------
+  // ---------------- SNAPSHOTS ----------------
   function restoreSnapshot(id) {
     const project = projects.find(p => p.id === activeId);
     if (!project) return;
@@ -480,7 +464,6 @@ export default function Home() {
         ...prev,
         { id, name, type: wizardType, html, history: [] }
       ]);
-
       setActiveId(id);
 
       const cmd = {
@@ -495,7 +478,7 @@ export default function Home() {
         ...prev,
         {
           from: "system",
-          text: `Wizard: created ${name}. Approve to run Autopilot.`
+          text: `Wizard created ${name}. Approve to run Autopilot.`
         }
       ]);
 
@@ -506,7 +489,9 @@ export default function Home() {
   function wizardBack() {
     if (wizardStep === 2) return setWizardStep(1);
     setShowWizard(false);
-  }  // ---------------- WIZARD MODAL ----------------
+  }
+
+  // ---------------- WIZARD MODAL ----------------
   function WizardModal() {
     if (!showWizard) return null;
 
@@ -559,7 +544,9 @@ export default function Home() {
 
           <div className="wizard-actions">
             <button onClick={wizardBack}>Back</button>
-            <button onClick={wizardNext}>{wizardStep === 2 ? "Finish" : "Next"}</button>
+            <button onClick={wizardNext}>
+              {wizardStep === 2 ? "Finish" : "Next"}
+            </button>
           </div>
         </div>
       </div>
@@ -586,7 +573,9 @@ export default function Home() {
               <li>Use Suggest for AI improvements (Light, Deep, Ultra)</li>
             </ul>
 
-            <p style={{ opacity: 0.8 }}>Tip: Do not reload — your work stays until replaced.</p>
+            <p style={{ opacity: 0.8 }}>
+              Tip: Do not reload — your work stays until replaced.
+            </p>
           </div>
 
           <div className="help-actions">
@@ -597,13 +586,13 @@ export default function Home() {
     );
   }
 
-  // ---------------- SUGGEST MENU DROPDOWN ----------------
+  // ---------------- SUGGEST MENU ----------------
   function SuggestMenu() {
     if (!showSuggestMenu) return null;
 
     return (
       <div className="suggest-overlay" onClick={() => setShowSuggestMenu(false)}>
-        <div className="suggest-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="suggest-modal" onClick={e => e.stopPropagation()}>
           <h3 className="suggest-title">AI Suggestions</h3>
 
           <button
@@ -642,7 +631,6 @@ export default function Home() {
           <button className="suggest-close" onClick={() => setShowSuggestMenu(false)}>
             Close
           </button>
-
         </div>
       </div>
     );
@@ -668,13 +656,13 @@ export default function Home() {
 
     return (
       <div className="palette-overlay" onClick={() => setShowPalette(false)}>
-        <div className="palette-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="palette-modal" onClick={e => e.stopPropagation()}>
           <input
             className="palette-input"
             autoFocus
             placeholder="Search actions…"
             value={paletteQuery}
-            onChange={(e) => setPaletteQuery(e.target.value)}
+            onChange={e => setPaletteQuery(e.target.value)}
           />
 
           <div className="palette-actions">
@@ -711,25 +699,11 @@ export default function Home() {
 
       {/* FLOATING TOOLBAR */}
       <div className="toolbarC">
-        <button onClick={() => setShowSuggestMenu(!showSuggestMenu)}>
-          Suggest ▼
-        </button>
-
-        <button onClick={() => handleToolbarClick("autopilot")}>
-          Autopilot
-        </button>
-
-        <button onClick={() => startWizard()}>
-          Wizard
-        </button>
-
-        <button onClick={() => setShowHelp(true)}>
-          Help
-        </button>
-
-        <button onClick={() => setShowPalette(true)}>
-          Palette
-        </button>
+        <button onClick={() => setShowSuggestMenu(!showSuggestMenu)}>Suggest ▼</button>
+        <button onClick={() => handleToolbarClick("autopilot")}>Autopilot</button>
+        <button onClick={startWizard}>Wizard</button>
+        <button onClick={() => setShowHelp(true)}>Help</button>
+        <button onClick={() => setShowPalette(true)}>Palette</button>
       </div>
 
       {/* HEADER */}
@@ -745,7 +719,7 @@ export default function Home() {
 
       {/* MAIN LAYOUT */}
       <main className="layout">
-        
+
         {/* LEFT PANEL */}
         <section className="panel panel-list">
           <h2>Projects</h2>
@@ -777,11 +751,7 @@ export default function Home() {
               <div className="recent-title">Recent Commands:</div>
               <div className="recent-row">
                 {recentCommands.map((r, i) => (
-                  <button
-                    key={i}
-                    className="recent-btn"
-                    onClick={() => applyRecent(r)}
-                  >
+                  <button key={i} className="recent-btn" onClick={() => applyRecent(r)}>
                     {r}
                   </button>
                 ))}
@@ -789,7 +759,6 @@ export default function Home() {
             </div>
           )}
 
-          {/* HISTORY */}
           {activeHistory.length > 0 && (
             <div className="history-panel">
               <div className="history-title">History (last 5 snapshots):</div>
@@ -812,7 +781,6 @@ export default function Home() {
             </div>
           )}
 
-          {/* CHAT LOG */}
           <div className="chat-log">
             {chatLog.map((m, i) => (
               <div key={i} className={`chat-msg ${m.from}`}>
@@ -821,21 +789,16 @@ export default function Home() {
             ))}
           </div>
 
-          {/* PENDING */}
           {pendingCommand && (
             <div className="pending-box">
               <div className="pending-title">Pending Action — approve to apply:</div>
               <div className="pending-desc">{describeCommand(pendingCommand)}</div>
-              <button
-                className="pending-btn"
-                onClick={() => applyCommand(pendingCommand)}
-              >
+              <button className="pending-btn" onClick={() => applyCommand(pendingCommand)}>
                 ✅ Approve & Apply
               </button>
             </div>
           )}
 
-          {/* INPUT */}
           <form className="chat-input-row" onSubmit={handleChatSubmit}>
             <input
               type="text"
@@ -862,7 +825,6 @@ export default function Home() {
             )}
           </div>
 
-          {/* PUBLISH TIP */}
           <div className="publish-tip">
             <small>
               Tip: Don’t publish until your site is fully final.<br />
