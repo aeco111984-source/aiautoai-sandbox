@@ -45,7 +45,7 @@ html, body {
   background: #1a2a4f;
 }
 
-/* Push header down below toolbar */
+/* Header sits below toolbar */
 .app-header {
   margin-top: 48px;
 }
@@ -60,7 +60,18 @@ html, body {
   background: #0b1020;
 }
 
-/* Main layout */
+.app-header-actions button {
+  margin-left: 0.4rem;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.8rem;
+  border-radius: 4px;
+  border: 1px solid #444;
+  background: #10182f;
+  color: #f5f5f5;
+  cursor: pointer;
+}
+
+/* Layout */
 .layout {
   flex: 1;
   display: flex;
@@ -223,7 +234,7 @@ iframe {
   background: #ffffff !important;
 }
 
-/* Section style */
+/* Sections */
 .sandbox-section {
   background: #ffffff;
   color: #000000;
@@ -310,6 +321,134 @@ iframe {
   border: 1px solid #3a4460;
   background: #10182f;
   color: #f5f5f5;
+  cursor: pointer;
+}
+
+/* Wizard overlay */
+.wizard-overlay,
+.help-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0,0,0,0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wizard-modal,
+.help-modal {
+  width: 90%;
+  max-width: 420px;
+  background: #0b1020;
+  border-radius: 10px;
+  border: 1px solid #2a3650;
+  padding: 1rem;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.7);
+}
+
+.wizard-title,
+.help-title {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.wizard-step {
+  font-size: 0.8rem;
+  opacity: 0.75;
+  margin-bottom: 0.75rem;
+}
+
+.wizard-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.8rem;
+}
+
+.wizard-btn {
+  width: 100%;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.85rem;
+  border-radius: 6px;
+  border: 1px solid #2a3650;
+  background: #111b32;
+  color: #e0e6ff;
+  text-align: left;
+}
+
+.wizard-btn.selected {
+  background: #1d2c52;
+  border-color: #4c6fff;
+}
+
+.wizard-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.6rem;
+}
+
+.wizard-actions button,
+.help-actions button {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+  border-radius: 6px;
+  border: 1px solid #444;
+  background: #10182f;
+  color: #f5f5f5;
+  cursor: pointer;
+}
+
+/* Help modal body */
+.help-body {
+  font-size: 0.78rem;
+  line-height: 1.4;
+  opacity: 0.9;
+}
+
+.help-body ul {
+  padding-left: 1.1rem;
+  margin-top: 0.3rem;
+  margin-bottom: 0.3rem;
+}
+
+/* Stuck button */
+.stuck-btn {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  z-index: 1000;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  border-radius: 999px;
+  border: 1px solid #2a3650;
+  background: #101b33;
+  color: #f2f5ff;
+  cursor: pointer;
+}
+
+/* Tips bar */
+.tips-bar {
+  padding: 0.4rem 0.75rem;
+  background: #071025;
+  border-bottom: 1px solid #1b2640;
+  font-size: 0.78rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tips-text {
+  max-width: 80%;
+}
+
+.tips-dismiss {
+  border: 1px solid #3a4460;
+  background: #10182f;
+  color: #f5f5f5;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
   cursor: pointer;
 }
 
